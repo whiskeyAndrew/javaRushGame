@@ -6,8 +6,8 @@ public class Player {
     private long id;
     private String name;
     private String title;
-    private String race;
-    private String profession;
+    private Race race;
+    private Profession profession;
     private Date birthday;
 
     private Boolean banned;
@@ -17,7 +17,10 @@ public class Player {
 
     //починить когда перестану выебываться на леху
 
-
+    public void UpdateExp(){
+        this.level =  Math.round((Math.sqrt(2500 + 200*this.getExperience()) - 50) / 100);
+        this.untilNextLevel = 50 * ((this.getLvl()) + 1) * (this.getLvl() + 2) - this.getExperience();
+    }
 
     public long getId() {
         return id;
@@ -43,19 +46,19 @@ public class Player {
         this.title = title;
     }
 
-    public String getRace() {
+    public Race getRace() {
         return race;
     }
 
-    public void setRace(String race) {
+    public void setRace(Race race) {
         this.race = race;
     }
 
-    public String getProfession() {
+    public Profession getProfession() {
         return profession;
     }
 
-    public void setProfession(String profession) {
+    public void setProfession(Profession profession) {
         this.profession = profession;
     }
 
@@ -99,7 +102,14 @@ public class Player {
         this.untilNextLevel = untilNextLevel;
     }
 
-    public Player(long id, String name, String title, String race, String profession, Date birthday, Boolean isBanned, Long experience, Long lvl, Long untilNextLevel) {
+    public Player(){};
+
+    public void recountExp() {
+        this.level = Math.round((Math.sqrt(2500 + 200 * this.experience) - 50) / 100);
+        this.untilNextLevel = 50 * (this.level + 1) * (this.level + 2) - this.experience;
+    }
+    public Player(String name, String title, Race race, Profession profession, Long birthday, Boolean banned, Integer experience){}
+    public Player(long id, String name, String title, Race race, Profession profession, Date birthday, Boolean isBanned, Long experience, Long lvl, Long untilNextLevel) {
         this.id = id;
         this.name = name;
         this.title = title;

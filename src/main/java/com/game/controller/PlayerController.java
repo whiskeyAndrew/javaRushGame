@@ -1,30 +1,25 @@
 package com.game.controller;
 
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.fasterxml.jackson.databind.util.JSONWrappedObject;
 import com.game.entity.Player;
 import com.game.playerDAO.PlayerDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+
+import org.springframework.web.bind.annotation.*;
+
+
+import javax.servlet.http.HttpServletRequest;
+import java.sql.SQLException;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
+@RequestMapping("/rest")
 public class PlayerController {
 
     private final PlayerDAO playerDAO;
@@ -34,15 +29,79 @@ public class PlayerController {
         this.playerDAO = playerDAO;
     }
 
-    @GetMapping("rest/players")
-    @ResponseBody
-    public List<Player> index() {
-        return playerDAO.index();
+
+    @GetMapping("")
+    public ResponseEntity<String> listAllHeaders(
+            @RequestHeader Map<String, String> headers) {
+        headers.forEach((key, value) -> {
+            System.out.printf("Header '%s' = %s%n", key, value);
+        });
+
+        return new ResponseEntity<String>(
+                String.format(headers.toString()), HttpStatus.OK);
     }
 
-    @GetMapping("rest/players/count")
+
+    //AllPlayers
+    @GetMapping("/players")
     @ResponseBody
-    public Integer count() {
-        return playerDAO.index().size();
+    public List<Player> GetAllPlayers(HttpServletRequest request) {
+
+        Enumeration enumeration = request.getParameterNames();
+        Map<String, Object> modelMap = new HashMap<>();
+        while(enumeration.hasMoreElements()){
+            String parameterName = (String) enumeration.nextElement();
+            modelMap.put(parameterName, request.getParameter(parameterName));
+        }
+
+
+        return playerDAO.GetPlayersFromDB(modelMap);
     }
+
+    //PlayerCount
+    @GetMapping("/players/count")
+    @ResponseBody
+    public Integer GetPlayersCount() {
+        return playerDAO.GetPlayersCount();
+    }
+
+    //AddPlayer
+    @PostMapping("/players")
+    @ResponseBody
+    public ResponseEntity<Player> AddPlayer(@RequestBody Player player) {
+        if(playerDAO.AddPlayer(player)!=null){
+            return new ResponseEntity<>(player,HttpStatus.OK);
+        } else{
+            return new ResponseEntity<>(null,HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/players/{id}")
+    @ResponseBody
+    public Player GetPlayer(@PathVariable("id") Integer id) {
+        return playerDAO.GetPlayer(id);
+    }
+
+    @PostMapping("/players/{id}")
+    @ResponseBody
+    public ResponseEntity<Player> UpdatePlayer(@RequestBody Player player, @PathVariable("id") Integer id) {
+
+        ResponseEntity<Player> responseEntity = null;
+
+        try {
+            int idInt = id;
+            responseEntity = playerDAO.UpdatePlayer(id, player);
+        } catch (Exception e) {
+            responseEntity = new ResponseEntity<>(player, HttpStatus.BAD_REQUEST);
+        }
+        return responseEntity;
+    }
+
+    @DeleteMapping("/players/{id}")
+    @ResponseBody
+    public ResponseEntity DeletePlayer(@PathVariable("id") Integer id) {
+        return playerDAO.DeletePlayer(id);
+    }
+
+    //Запилить фильтрацию по данным снизу, по количеству страниц и по другому
 }
